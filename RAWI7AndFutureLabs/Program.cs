@@ -16,7 +16,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 /*AddScoped обрано тому, що він створює новий екземпляр сервісу для кожної області видимості (кожного HTTP-запиту),
- * що підходить для веб-додатків де кожен запит мав свій власний екземпляр*/
+  що підходить для веб-додатків де кожен запит мав свій власний екземпляр*/
 builder.Services.AddScoped<ICommentsService, CommentsService>();
 builder.Services.AddScoped<IPostsService, PostsService>();
 //AddTransient обрано тому, що він створює новий екземпляр сервісу кожного разу, коли його запитують

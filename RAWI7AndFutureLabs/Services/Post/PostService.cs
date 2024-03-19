@@ -13,14 +13,19 @@ namespace RAWI7AndFutureLabs.Services
 
         public PostsService()
         {
-            _posts = Enumerable.Range(1, 10).Select(i => new Posts
+            _posts = new List<Posts>
             {
-                Id = i,
-                Title = $"Post {i} title",
-                Content = $"Post {i} content",
-                CreatedAt = DateTime.Now.AddDays(-i),
-                UserId = i % 3 + 1
-            }).ToList();
+                new Posts {Id=1, Title="Post 1 title", Content="Post 1 content", CreatedAt=DateTime.Now.AddDays(-1), UserId=1},
+                new Posts {Id=2, Title="Post 2 title", Content="Post 2 content", CreatedAt=DateTime.Now.AddDays(-2), UserId=2},
+                new Posts {Id=3, Title="Post 3 title", Content="Post 3 content", CreatedAt=DateTime.Now.AddDays(-3), UserId=3},
+                new Posts {Id=4, Title="Post 4 title", Content="Post 4 content", CreatedAt=DateTime.Now.AddDays(-4), UserId=4},
+                new Posts {Id=5, Title="Post 5 title", Content="Post 5 content", CreatedAt=DateTime.Now.AddDays(-5), UserId=5},
+                new Posts {Id=6, Title="Post 6 title", Content="Post 6 content", CreatedAt=DateTime.Now.AddDays(-6), UserId=6},
+                new Posts {Id=7, Title="Post 7 title", Content="Post 7 content", CreatedAt=DateTime.Now.AddDays(-7), UserId=7},
+                new Posts {Id=8, Title="Post 8 title", Content="Post 8 content", CreatedAt=DateTime.Now.AddDays(-8), UserId=8},
+                new Posts {Id=9, Title="Post 9 title", Content="Post 9 content", CreatedAt=DateTime.Now.AddDays(-9), UserId=9},
+                new Posts {Id=10, Title="Post 10 title", Content="Post 10 content", CreatedAt=DateTime.Now.AddDays(-10), UserId=10},
+            };
         }
         public async Task<List<Posts>> GetPostsAsync()
         {

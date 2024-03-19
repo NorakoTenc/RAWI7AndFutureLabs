@@ -12,6 +12,19 @@ namespace RAWI7AndFutureLabs.Services.User
                 Username = $"User{i}",
                 Email = $"user{i}@example.com"
             }).ToList();
+            _users = new List<Users> 
+            {
+                new Users {Id=1, Username="User1",Email="user1@mail.com"},
+                new Users {Id=2, Username="User2",Email="user2@mail.com"},
+                new Users {Id=3, Username="User3",Email="user3@mail.com"},
+                new Users {Id=4, Username="User4",Email="user4@mail.com"},
+                new Users {Id=5, Username="User5",Email="user5@mail.com"},
+                new Users {Id=6, Username="User6",Email="user6@mail.com"},
+                new Users {Id=7, Username="User7",Email="user7@mail.com"},
+                new Users {Id=8, Username="User8",Email="user8@mail.com"},
+                new Users {Id=9, Username="User9",Email="user9@mail.com"},
+                new Users {Id=10, Username="User10",Email="user10@mail.com"},
+            };
         }
         public async Task<List<Users>> GetUsersAsync()
         {
