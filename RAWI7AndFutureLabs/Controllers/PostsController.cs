@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RAWI7AndFutureLabs.Models;
 using RAWI7AndFutureLabs.Services;
@@ -7,6 +8,7 @@ using RAWI7AndFutureLabs.Services.Post;
 
 namespace RAWI7AndFutureLabs.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/posts")]
     public class PostsController : ControllerBase
