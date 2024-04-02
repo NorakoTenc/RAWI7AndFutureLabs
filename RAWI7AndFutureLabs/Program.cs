@@ -6,6 +6,13 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.OpenApi.Models;
+using RAWI7AndFutureLabs.Services.Data;
+using Microsoft.AspNetCore.Authentication.OAuth;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using RAWI7AndFutureLabs.Models;
+using RAWI7AndFutureLabs.Services.AUsers;
+using RAWI7AndFutureLabs.Services.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,12 +70,17 @@ builder.Services.AddSwaggerGen(c =>
     c.AddSecurityRequirement(securityRequirement);
 });
 
+
+builder.Services.AddScoped<IDataService, DataService>();
 /*AddScoped обрано тому, що він створює новий екземпляр сервісу для кожної області видимості (кожного HTTP-запиту),
   що підходить для веб-додатків де кожен запит мав свій власний екземпляр*/
 builder.Services.AddScoped<ICommentsService, CommentsService>();
 builder.Services.AddScoped<IPostsService, PostsService>();
 //AddTransient обрано тому, що він створює новий екземпляр сервісу кожного разу, коли його запитують
 builder.Services.AddTransient<IUsersService, UsersService>();
+
+builder.Services.AddScoped<IAUsersService, AUsersService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
@@ -103,9 +115,18 @@ app.UseAuthorization();
 
 app.UseAuthentication();
 
-app.MapGet("/connect/authorize", async context =>
+app.Map("/login/{username}", (string username) =>
 {
-    context.Response.Redirect("/login");
+    var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
+    // создаем JWT-токен
+    var jwt = new JwtSecurityToken(
+            issuer: AuthOptions.ISSUER,
+            audience: AuthOptions.AUDIENCE,
+    claims: claims,
+    expires: DateTime.UtcNow.Add(TimeSpan.FromMinutes(2)),
+            signingCredentials: new SigningCredentials(AuthOptions.GetSymmetricSecurityKey(), SecurityAlgorithms.HmacSha256));
+
+    return new JwtSecurityTokenHandler().WriteToken(jwt);
 });
 
 app.MapControllers();

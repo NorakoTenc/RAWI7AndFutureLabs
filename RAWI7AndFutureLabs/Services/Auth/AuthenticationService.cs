@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RAWI7AndFutureLabs.Models;
+using RAWI7AndFutureLabs.Services.AUsers;
 namespace RAWI7AndFutureLabs.Services.Auth
 {
     public class AuthenticationService : IAuthenticationService
