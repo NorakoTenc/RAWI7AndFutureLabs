@@ -13,8 +13,47 @@ using System.Security.Claims;
 using RAWI7AndFutureLabs.Models;
 using RAWI7AndFutureLabs.Services.AUsers;
 using RAWI7AndFutureLabs.Services.Auth;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.DependencyInjection;
+using RAWI7AndFutureLabs.Services.HealthCheck;
+using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddHealthChecks()
+    .AddCheck("1", new CustomService1HealthCheck())
+    .AddCheck("2", new CustomService2HealthCheck());
+builder.Services.Configure<HealthCheckOptions>(options =>
+{
+    options.ResponseWriter = WriteResponse;
+});
+
+async static Task WriteResponse(HttpContext httpContext, HealthReport result)
+{
+    httpContext.Response.ContentType = "application/json";
+
+    var healthCheckResult = new
+    {
+        status = result.Status.ToString(),
+        results = result.Entries.Select(pair => new
+        {
+            name = pair.Key,
+            status = pair.Value.Status.ToString(),
+            description = pair.Value.Description,
+            data = pair.Value.Data
+        })
+    };
+
+    var responseJson = JsonSerializer.Serialize(healthCheckResult, new JsonSerializerOptions
+    {
+        WriteIndented = true
+    });
+
+    await httpContext.Response.WriteAsync(responseJson);
+}
+
 
 // Add services to the container.
 
@@ -80,7 +119,6 @@ builder.Services.AddScoped<IPostsService, PostsService>();
 builder.Services.AddTransient<IUsersService, UsersService>();
 
 builder.Services.AddScoped<IAUsersService, AUsersService>();
-builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
@@ -100,14 +138,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "RAWI7AndFutureLabs v1");
+        c.SwaggerEndpoint("/health/swagger", "Health Checks");
         c.OAuthClientId("swagger");
         c.OAuthAppName("Swagger UI");
     });
 }
+app.UseHealthChecks("/health");
 
 app.UseHttpsRedirection();
 
