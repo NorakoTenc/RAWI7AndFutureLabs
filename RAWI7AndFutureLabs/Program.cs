@@ -19,8 +19,11 @@ using Microsoft.Extensions.DependencyInjection;
 using RAWI7AndFutureLabs.Services.HealthCheck;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+await mSerilog.SerilogTaskAsync();
 
 builder.Services.AddHealthChecks()
     .AddCheck("1", new CustomService1HealthCheck())
@@ -134,7 +137,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]))
         };
     });
-
+builder.Host.UseSerilog();
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
@@ -159,7 +162,6 @@ app.UseAuthentication();
 app.Map("/login/{username}", (string username) =>
 {
     var claims = new List<Claim> { new Claim(ClaimTypes.Name, username) };
-    // создаем JWT-токен
     var jwt = new JwtSecurityToken(
             issuer: AuthOptions.ISSUER,
             audience: AuthOptions.AUDIENCE,
