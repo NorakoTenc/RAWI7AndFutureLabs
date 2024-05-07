@@ -1,62 +1,34 @@
-﻿using RAWI7AndFutureLabs.Services.Comment;
-using RAWI7AndFutureLabs.Services.Post;
-using RAWI7AndFutureLabs.Services.User;
-using RAWI7AndFutureLabs.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.OpenApi.Models;
-using RAWI7AndFutureLabs.Services.Data;
-using Microsoft.AspNetCore.Authentication.OAuth;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 using RAWI7AndFutureLabs.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using RAWI7AndFutureLabs.Services.AUsers;
 using RAWI7AndFutureLabs.Services.Auth;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using Microsoft.Extensions.DependencyInjection;
 using RAWI7AndFutureLabs.Services.HealthCheck;
-using Newtonsoft.Json.Linq;
-using System.Text.Json;
 using Serilog;
+using RAWI7AndFutureLabs.Services.Available;
+using RAWI7AndFutureLabs.Services.Comment;
+using RAWI7AndFutureLabs.Services.Data;
+using RAWI7AndFutureLabs.Services.Post;
+using RAWI7AndFutureLabs.Services.User;
+using RAWI7AndFutureLabs.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
-
-await mSerilog.SerilogTaskAsync();
-
-builder.Services.AddHealthChecks()
-    .AddCheck("1", new CustomService1HealthCheck())
-    .AddCheck("2", new CustomService2HealthCheck());
-builder.Services.Configure<HealthCheckOptions>(options =>
-{
-    options.ResponseWriter = WriteResponse;
-});
-
-async static Task WriteResponse(HttpContext httpContext, HealthReport result)
-{
-    httpContext.Response.ContentType = "application/json";
-
-    var healthCheckResult = new
-    {
-        status = result.Status.ToString(),
-        results = result.Entries.Select(pair => new
-        {
-            name = pair.Key,
-            status = pair.Value.Status.ToString(),
-            description = pair.Value.Description,
-            data = pair.Value.Data
-        })
-    };
-
-    var responseJson = JsonSerializer.Serialize(healthCheckResult, new JsonSerializerOptions
-    {
-        WriteIndented = true
-    });
-
-    await httpContext.Response.WriteAsync(responseJson);
-}
-
 
 // Add services to the container.
 
@@ -120,8 +92,9 @@ builder.Services.AddScoped<ICommentsService, CommentsService>();
 builder.Services.AddScoped<IPostsService, PostsService>();
 //AddTransient обрано тому, що він створює новий екземпляр сервісу кожного разу, коли його запитують
 builder.Services.AddTransient<IUsersService, UsersService>();
-
 builder.Services.AddScoped<IAUsersService, AUsersService>();
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 
@@ -138,6 +111,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 builder.Host.UseSerilog();
+
+builder.Services.AddHttpClient();
+builder.Services.AddHostedService(provider =>
+{
+    var webPageUrl = "https://example.com";
+    var logFilePath = "logs/log.log"; 
+    return new WebPageAvailabilityService(webPageUrl, logFilePath, provider.GetRequiredService<IHttpClientFactory>());
+});
+builder.Services.AddMemoryCache(); 
+builder.Services.AddHostedService<WebPageAvailabilityService>();
+builder.Services.AddHostedService<QuartzScheduledTaskService>();
+builder.Services.AddHostedService<ExternalApiDataFetchingService>();
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
@@ -151,7 +137,6 @@ if (app.Environment.IsDevelopment())
         c.OAuthAppName("Swagger UI");
     });
 }
-app.UseHealthChecks("/health");
 
 app.UseHttpsRedirection();
 

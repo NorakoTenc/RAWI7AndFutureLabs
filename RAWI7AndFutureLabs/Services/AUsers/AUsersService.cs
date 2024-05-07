@@ -1,11 +1,14 @@
-﻿using RAWI7AndFutureLabs.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using RAWI7AndFutureLabs.Models;
 
 namespace RAWI7AndFutureLabs.Services.AUsers
 {
     public class AUsersService : IAUsersService
     {
-private readonly List<AUser> _users;
-
+        private readonly List<AUser> _users;
         public AUsersService()
         {
             _users = new List<AUser>
@@ -17,7 +20,7 @@ private readonly List<AUser> _users;
                     LastName = "One",
                     Email = "user.one@email.com",
                     DateOfBirth = new DateTime(1990, 5, 15),
-                    EncryptedPassword = EncryptPassword("qwe123"), 
+                    EncryptedPassword = EncryptPassword("qwe123"),
                     LastLoginDate = DateTime.Now,
                     FailedLoginAttempts = 0
                 },
@@ -38,7 +41,13 @@ private readonly List<AUser> _users;
         {
             return password;
         }
-
+        public async Task<bool> AuthenticateUserAsync(string email, string password)
+        {
+            var user = _users.FirstOrDefault(u => u.Email == email);
+            if (user == null || user.EncryptedPassword != EncryptPassword(password))
+                return false;
+            return true;
+        }
         public List<AUser> GetTestUsers()
         {
             return _users;
